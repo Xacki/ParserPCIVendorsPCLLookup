@@ -23,12 +23,19 @@ namespace ParserPCIVendorsPCLLookup
         {
             InitializeComponent();
         }
-        public class JsonObject
+        public class PciLookUp
         {
-            public string desc { get; set; }
             public string id { get; set; }
-            public string venDesc { get; set; }
+            public string desc { get; set; }
             public string venID { get; set; }
+            public string venDesc { get; set; }
+
+        }
+
+        public class PciVendor
+        {
+            public string venID { get; set; }
+            public string venDesc { get; set; }
 
         }
 
@@ -65,7 +72,42 @@ namespace ParserPCIVendorsPCLLookup
             pb.Visible = false;
         }
 
+        void ProcessParse(ListBox lb, ProgressBar pb)
+        {
+            string line = "";
+            using (WebClient wc  = new WebClient()) line = wc.DownloadString("https://www.pcilookup.com/api.php?action=search&vendor=&device=&_=1662980845774");
 
+            List<PciLookUp> json = JsonConvert.DeserializeObject<List<PciLookUp>>(line);
+
+            HashSet<PciVendor> vendors = new HashSet<PciVendor>();
+            foreach (PciLookUp obj in json)
+            {
+                vendors.Add(new PciVendor() { venDesc=obj.venDesc,venID=obj.venID});
+            }
+            progressBar2.Visible = true;
+            progressBar2.Maximum = json.Count();
+            foreach (PciVendor item in vendors)
+            {
+                lb.Items.Add($"{item.venID.ToUpper()} {item.venDesc}");
+                foreach (var obj in json)
+                {
+                    if (obj.venDesc == item.venDesc)
+                    {
+                        lb.Items.Add($"{obj.id.ToUpper()} {obj.desc}");
+                        
+                    }
+                }
+                progressBar2.Value++;
+                lb.Items.Add("");
+            }
+            progressBar2.Visible = false;
+
+        }
+
+        public async Task SelectFromPciLookup(ListBox lb, ProgressBar pb)
+        {
+            await Task.Run(() => ProcessParse(lb,pb));
+        }
 
         private async void button1_Click(object sender, EventArgs e)
         {
@@ -73,24 +115,9 @@ namespace ParserPCIVendorsPCLLookup
 
         }
       
-
-        private  void button2_Click(object sender, EventArgs e)
+        private async void button2_Click(object sender, EventArgs e)
         {
-            string line = "";
-
-            using (WebClient wc  = new WebClient())
-                line = wc.DownloadString("https://www.pcilookup.com/api.php?action=search&vendor=&device=&_=1662980845774");
-
-            List<JsonObject> json = JsonConvert.DeserializeObject<List<JsonObject>>(line);
-            progressBar2.Maximum = json.Count;
-            progressBar2.Visible = true;
-
-            foreach (JsonObject val in json)
-            {
-                listBox2.Items.Add($"{val.venID} {val.venDesc} {val.id} {val.desc}");
-                progressBar2.Value++;
-            }
-            progressBar2.Visible = false;
+            await Task.Run(() => SelectFromPciLookup(listBox2, progressBar2));
 
         }
 
