@@ -32,12 +32,12 @@ namespace ParserPCIVendorsPCLLookup
 
         }
 
-        /*public class PciVendor
+        public class PciVendor
         {
             public string venID { get; set; }
             public string venDesc { get; set; }
 
-        }*/
+        }
 
         public async void  SelectFromDeviceHunt(ListBox lb,ProgressBar pb)
         {
@@ -79,28 +79,33 @@ namespace ParserPCIVendorsPCLLookup
 
             List<PciLookUp> json = JsonConvert.DeserializeObject<List<PciLookUp>>(line);
 
-            List<string> vendors = new List<string>();
-
+            HashSet<PciVendor> vendors = new HashSet<PciVendor>();
             foreach (PciLookUp obj in json)
             {
-                vendors.Add(obj.venID+" "+obj.venDesc);
+                vendors.Add(new PciVendor() { venDesc=obj.venDesc,venID=obj.venID});
             }
+<<<<<<< HEAD
 
             vendors = vendors.Distinct().ToList();
 
-            label1.Text = vendors.Count.ToString();
+            progressBar2.Visible = true;
+            progressBar2.Maximum = vendors.Count();
+            foreach (var item in vendors)
+=======
             progressBar2.Visible = true;
             progressBar2.Maximum = json.Count();
-            foreach (var item in vendors)
+            foreach (PciVendor item in vendors)
+>>>>>>> parent of 8c2716e (1.5)
             {
-                lb.Items.Add($"{item}");
+                lb.Items.Add($"{item.venID.ToUpper()} {item.venDesc}");
                 foreach (var obj in json)
                 {
-                    if ((obj.venID + " " + obj.venDesc) == item)
+                    if (obj.venDesc == item.venDesc)
                     {
                         lb.Items.Add($"{obj.id.ToUpper()} {obj.desc}");
                         
                     }
+                    
                 }
                 progressBar2.Value++;
                 lb.Items.Add("");
