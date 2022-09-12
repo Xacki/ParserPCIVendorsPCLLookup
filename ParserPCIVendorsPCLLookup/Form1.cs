@@ -31,7 +31,8 @@ namespace ParserPCIVendorsPCLLookup
             public string venID { get; set; }
 
         }
-        private async void button1_Click(object sender, EventArgs e)
+
+        public async void  SelectFromDeviceHunt(ListBox lb,ProgressBar pb)
         {
             string qurySelectCell;
             IHtmlCollection<IElement> htmlElement;
@@ -51,25 +52,33 @@ namespace ParserPCIVendorsPCLLookup
 
             IEnumerable<string> vendorName = htmlElement.Select(m => m.TextContent);
 
-            var numbersAndWords = vendorId.Zip(vendorName, (first, second) => first.ToUpper()+" "+ second);
+            var numbersAndWords = vendorId.Zip(vendorName, (first, second) => $"{first.ToUpper().Trim()} {second}");
 
-            progressBar1.Maximum = numbersAndWords.Count();
-            progressBar1.Visible = true;
+            pb.Maximum = numbersAndWords.Count();
+            pb.Visible = true;
 
             foreach (var str in numbersAndWords)
             {
-                listBox1.Items.Add(str);
-                progressBar1.Value++;
+                lb.Items.Add(str);
+                pb.Value++;
             }
-            progressBar1.Visible = false;
+            pb.Visible = false;
+        }
+
+
+
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            await Task.Run(() => SelectFromDeviceHunt(listBox1,progressBar1));
 
         }
       
-        private void button2_Click(object sender, EventArgs e)
+
+        private  void button2_Click(object sender, EventArgs e)
         {
             string line = "";
 
-             using (WebClient wc  = new WebClient())
+            using (WebClient wc  = new WebClient())
                 line = wc.DownloadString("https://www.pcilookup.com/api.php?action=search&vendor=&device=&_=1662980845774");
 
             List<JsonObject> json = JsonConvert.DeserializeObject<List<JsonObject>>(line);
